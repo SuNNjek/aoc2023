@@ -1,6 +1,6 @@
 advent_of_code::solution!(1);
 
-use regex::{Regex, Match};
+use regex::Regex;
 
 fn parse_digit(digit: &str) -> Option<u32> {
     match digit {
@@ -19,17 +19,14 @@ fn parse_digit(digit: &str) -> Option<u32> {
 }
 
 fn get_line_value(line: &str, regex: &Regex) -> Option<u32> {
-    // Needs to match at every possible position in the string, otherwise something like "5threeeightwor" will return 5 and eight,
-    // probably because the "two" uses the "t" of "eight"
-    let matches: Vec<Match> = (0..line.len()).filter_map(|i| regex.find_at(line, i)).collect();
-
     // Get the first and last matches and parse them as a string
-    let first_digit = matches
-        .first()
+    let first_digit = (0..line.len())
+        .find_map(|i| regex.find_at(line, i))
         .and_then(|m| parse_digit(m.as_str()))?;
 
-    let last_digit = matches
-        .last()
+    let last_digit = (0..line.len())
+        .rev()
+        .find_map(|i| regex.find_at(line, i))
         .and_then(|m| parse_digit(m.as_str()))?;
 
     Some(first_digit * 10 + last_digit)
