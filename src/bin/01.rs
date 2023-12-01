@@ -18,7 +18,7 @@ fn parse_digit(digit: &str) -> Option<u32> {
     }
 }
 
-fn get_first_and_last_digit(line: &str, regex: Regex) -> Option<(u32, u32)> {
+fn get_line_value(line: &str, regex: &Regex) -> Option<u32> {
     // Needs to match at every possible position in the string, otherwise something like "5threeeightwor" will return 5 and eight,
     // probably because the "two" uses the "t" of "eight"
     let matches: Vec<Match> = (0..line.len()).filter_map(|i| regex.find_at(line, i)).collect();
@@ -26,44 +26,32 @@ fn get_first_and_last_digit(line: &str, regex: Regex) -> Option<(u32, u32)> {
     // Get the first and last matches and parse them as a string
     let first_digit = matches
         .first()
-        .and_then(|m| parse_digit(m.as_str()));
+        .and_then(|m| parse_digit(m.as_str()))?;
 
     let last_digit = matches
         .last()
-        .and_then(|m| parse_digit(m.as_str()));
+        .and_then(|m| parse_digit(m.as_str()))?;
 
-    match (first_digit, last_digit) {
-        (Some(first), Some(last)) => Some((first, last)),
-        _ => None
-    }
+    Some(first_digit * 10 + last_digit)
 }
 
-// Callback that adds the given digits to the accumulator
-fn sum_up_digits(acc: u32, digits: Option<(u32, u32)>) -> u32 {
-    acc + match digits {
-        Some((first, last)) => first * 10 + last,
-        None => 0
-    }
+fn get_result(input: &str, pattern: &Regex) -> u32 {
+    // Split input into lines, get the value for each line using the given regex and sum all the values up at the end
+    input.lines()
+        .filter_map(|l| get_line_value(l, &pattern))
+        .sum()
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
     let pattern = Regex::new("\\d").unwrap();
 
-    Some(
-        input.lines()
-            .map(|l| get_first_and_last_digit(l, pattern.clone()))
-            .fold(0, sum_up_digits)
-    )
+    Some(get_result(input, &pattern))
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
     let pattern = Regex::new("\\d|one|two|three|four|five|six|seven|eight|nine").unwrap();
 
-    Some(
-        input.lines()
-            .map(|l| get_first_and_last_digit(l, pattern.clone()))
-            .fold(0, sum_up_digits)
-    )
+    Some(get_result(input, &pattern))
 }
 
 #[cfg(test)]
