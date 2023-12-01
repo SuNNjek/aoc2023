@@ -34,8 +34,9 @@ fn get_line_value(line: &str, regex: &Regex) -> Option<u32> {
 
 fn get_result(input: &str, pattern: &Regex) -> u32 {
     // Split input into lines, get the value for each line using the given regex and sum all the values up at the end
-    input.lines()
-        .filter_map(|l| get_line_value(l, &pattern))
+    input
+        .lines()
+        .filter_map(|l| get_line_value(l, pattern))
         .sum()
 }
 
@@ -57,13 +58,17 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let result = part_one(&advent_of_code::template::read_file_part("examples", DAY, 1));
+        let result = part_one(&advent_of_code::template::read_file_part(
+            "examples", DAY, 1,
+        ));
         assert_eq!(result, Some(142));
     }
 
     #[test]
     fn test_part_two() {
-        let result = part_two(&advent_of_code::template::read_file_part("examples", DAY, 2));
+        let result = part_two(&advent_of_code::template::read_file_part(
+            "examples", DAY, 2,
+        ));
         assert_eq!(result, Some(281));
     }
 }
