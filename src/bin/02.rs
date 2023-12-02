@@ -10,11 +10,20 @@ struct Cubes {
 
 impl Cubes {
     fn empty() -> Cubes {
-        Cubes { red_count: 0, green_count: 0, blue_count: 0 }
+        Cubes {
+            red_count: 0,
+            green_count: 0,
+            blue_count: 0,
+        }
     }
 
     fn get_power(&self) -> u32 {
-        let &Cubes{ red_count, green_count, blue_count }= self;
+        let &Cubes {
+            red_count,
+            green_count,
+            blue_count,
+        } = self;
+
         red_count * green_count * blue_count
     }
 }
@@ -26,32 +35,41 @@ struct Game {
 
 fn parse_revelation(input: &str) -> Cubes {
     input
-        .split(",")
+        .split(',')
         .map(|p| p.trim())
         .filter_map(|s| {
-            let (num_str, color) = s.split_once(" ")?;
+            let (num_str, color) = s.split_once(' ')?;
             let num: u32 = num_str.parse().ok()?;
 
             Some((num, color))
         })
         .fold(
             Cubes::empty(),
-            |Cubes{ mut red_count, mut green_count, mut blue_count}, (number, color)| {
+            |Cubes {
+                 mut red_count,
+                 mut green_count,
+                 mut blue_count,
+             },
+             (number, color)| {
                 match color {
                     "red" => red_count += number,
                     "green" => green_count += number,
-                    "blue" => blue_count +=  number,
+                    "blue" => blue_count += number,
 
                     _ => (),
                 }
 
-                return Cubes { red_count, green_count, blue_count };
+                Cubes {
+                    red_count,
+                    green_count,
+                    blue_count,
+                }
             },
         )
 }
 
 fn parse_game_id(input: &str) -> Option<u32> {
-    let (game, num) = input.split_once(" ")?;
+    let (game, num) = input.split_once(' ')?;
     if game != "Game" {
         return None;
     }
@@ -60,65 +78,92 @@ fn parse_game_id(input: &str) -> Option<u32> {
 }
 
 fn parse_game(input: &str) -> Option<Game> {
-    let (game_def, revelations) = input.split_once(":")?;
+    let (game_def, revelations) = input.split_once(':')?;
 
     let game_num = parse_game_id(game_def)?;
-    let revs: Vec<Cubes> = revelations
-        .split(";")
-        .map(|r| parse_revelation(r))
-        .collect();
+    let revs: Vec<Cubes> = revelations.split(';').map(parse_revelation).collect();
 
-    return Some(Game {
+    Some(Game {
         id: game_num,
-        revelations: revs
-    });
+        revelations: revs,
+    })
 }
 
 fn parse_games(input: &str) -> Vec<Game> {
     input.lines().filter_map(parse_game).collect()
 }
 
-fn game_fits(Game{ revelations: game_revs, .. }: &Game, &Cubes{red_count, green_count, blue_count}: &Cubes) -> bool {
-    game_revs
-        .iter()
-        .all(|&Cubes{red_count: rev_red, green_count: rev_green, blue_count: rev_blue}|
-            red_count >= rev_red && green_count >= rev_green && blue_count >= rev_blue
-        )
+fn game_fits(
+    Game {
+        revelations: game_revs,
+        ..
+    }: &Game,
+    &Cubes {
+        red_count,
+        green_count,
+        blue_count,
+    }: &Cubes,
+) -> bool {
+    game_revs.iter().all(
+        |&Cubes {
+             red_count: rev_red,
+             green_count: rev_green,
+             blue_count: rev_blue,
+         }| { red_count >= rev_red && green_count >= rev_green && blue_count >= rev_blue },
+    )
 }
 
-fn get_minimum_cubes(Game { revelations: game_revs, .. }: &Game) -> Cubes {
-    game_revs
-        .iter()
-        .fold(Cubes::empty(), |Cubes{red_count: max_r, green_count: max_g, blue_count: max_b}, &Cubes{ red_count: curr_r, green_count: curr_g, blue_count: curr_b}| {
+fn get_minimum_cubes(
+    Game {
+        revelations: game_revs,
+        ..
+    }: &Game,
+) -> Cubes {
+    game_revs.iter().fold(
+        Cubes::empty(),
+        |Cubes {
+             red_count: max_r,
+             green_count: max_g,
+             blue_count: max_b,
+         },
+         &Cubes {
+             red_count: curr_r,
+             green_count: curr_g,
+             blue_count: curr_b,
+         }| {
             Cubes {
                 red_count: max(max_r, curr_r),
                 green_count: max(max_g, curr_g),
-                blue_count: max(max_b, curr_b)
+                blue_count: max(max_b, curr_b),
             }
-        })
+        },
+    )
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let total_cubes = Cubes{
+    let total_cubes = Cubes {
         red_count: 12,
         green_count: 13,
-        blue_count: 14
+        blue_count: 14,
     };
 
-    Some(parse_games(input)
-        .into_iter()
-        .filter(|g| game_fits(g, &total_cubes))
-        .map(|Game { id, .. }| id)
-        .sum()
+    Some(
+        parse_games(input)
+            .into_iter()
+            .filter(|g| game_fits(g, &total_cubes))
+            .map(|Game { id, .. }| id)
+            .sum(),
     )
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    Some(parse_games(input)
-        .iter()
-        .map(get_minimum_cubes)
-        .map(|c| c.get_power())
-        .sum())
+    Some(
+        parse_games(input)
+            .iter()
+            .map(get_minimum_cubes)
+            .map(|c| c.get_power())
+            .sum(),
+    )
 }
 
 #[cfg(test)]
