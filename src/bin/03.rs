@@ -65,19 +65,15 @@ fn is_part_number(all_tokens: &[Token], number: &Token) -> bool {
 
 fn get_gears_sum(tokens: &[Token]) -> u32 {
     // Get all '*' symbols
-    let candidates: Vec<&Token> = tokens.into_iter()
-        .filter(|&t| match t.value {
-            TokenValue::Symbol('*') => true,
-
-            _ => false,
-        })
+    let candidates: Vec<&Token> = tokens.iter()
+        .filter(|&t| matches!(t.value, TokenValue::Symbol('*')))
         .collect();
 
     candidates.into_iter()
         .filter_map(|c| {
-            let numbers: Vec<u32> = tokens.into_iter()
+            let numbers: Vec<u32> = tokens.iter()
                 .filter_map(|t| match t.value {
-                    TokenValue::Number(num) if are_tokens_adjacent(c, &t)
+                    TokenValue::Number(num) if are_tokens_adjacent(c, t)
                         => Some(num),
 
                     _ => None,
