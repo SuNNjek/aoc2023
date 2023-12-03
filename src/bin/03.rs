@@ -3,14 +3,14 @@ advent_of_code::solution!(3);
 use regex::Regex;
 
 enum TokenValue {
-    Symbol,
+    Symbol(char),
     Number(u32),
 }
 
 impl TokenValue {
     fn from_string(input: &str) -> TokenValue {
         input.parse()
-            .map_or(TokenValue::Symbol, TokenValue::Number)
+            .map_or(TokenValue::Symbol(input.chars().next().unwrap()), TokenValue::Number)
     }
 }
 
@@ -47,18 +47,49 @@ fn get_tokens(input: &str) -> Vec<Token> {
         .collect()
 }
 
-fn is_part_number(all_tokens: &[Token], token: &Token) -> bool {
+fn are_tokens_adjacent(symbol: &Token, number: &Token) -> bool {
+    let is_correct_row: bool = (symbol.row - 1) <= number.row && number.row <= (symbol.row + 1);
+    let is_correct_col = symbol.col_start >= (number.col_start - 1) && symbol.col_end <= (number.col_end + 1);
+
+    is_correct_row && is_correct_col
+}
+
+fn is_part_number(all_tokens: &[Token], number: &Token) -> bool {
     all_tokens.iter()
         .filter(|&t| match t.value {
-            TokenValue::Symbol => true,
+            TokenValue::Symbol(_) => true,
             TokenValue::Number(_) => false,
         })
-        .any(|&Token { row, col_start, col_end, .. }| {
-            let is_correct_row = (row - 1) <= token.row && token.row <= (row + 1);
-            let is_correct_col = col_start >= (token.col_start - 1) && col_end <= (token.col_end + 1);
+        .any(|symbol| are_tokens_adjacent(symbol, number))
+}
 
-            is_correct_row && is_correct_col
+fn get_gears_sum(tokens: &[Token]) -> u32 {
+    // Get all '*' symbols
+    let candidates: Vec<&Token> = tokens.into_iter()
+        .filter(|&t| match t.value {
+            TokenValue::Symbol('*') => true,
+
+            _ => false,
         })
+        .collect();
+
+    candidates.into_iter()
+        .filter_map(|c| {
+            let numbers: Vec<u32> = tokens.into_iter()
+                .filter_map(|t| match t.value {
+                    TokenValue::Number(num) if are_tokens_adjacent(c, &t)
+                        => Some(num),
+
+                    _ => None,
+                })
+                .collect();
+
+            if numbers.len() == 2 {
+                Some(numbers.iter().product::<u32>())
+            } else {
+                None
+            }
+        }).sum()
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -66,11 +97,11 @@ pub fn part_one(input: &str) -> Option<u32> {
 
     let res: u32 = tokens.iter()
         .filter(|&t| match t {
-            Token { value: TokenValue::Symbol, .. } => false,
+            Token { value: TokenValue::Symbol(_), .. } => false,
             Token { value: TokenValue::Number(_), .. } => is_part_number(&tokens, t)
         })
         .map(|t| match t.value {
-            TokenValue::Symbol => 0,
+            TokenValue::Symbol(_) => 0,
             TokenValue::Number(num) => num,
         })
         .sum();
@@ -79,7 +110,10 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let tokens = get_tokens(input);
+    let gears_sum = get_gears_sum(&tokens);
+
+    Some(gears_sum)
 }
 
 #[cfg(test)]
@@ -95,6 +129,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(467835));
     }
 }
