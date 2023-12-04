@@ -2,7 +2,6 @@ advent_of_code::solution!(4);
 
 use std::collections::{HashSet, HashMap, VecDeque};
 
-#[derive(Clone)]
 struct Card {
     id: u32,
     winning_numbers: HashSet<u32>,
@@ -64,14 +63,22 @@ fn parse_card(input: &str) -> Option<Card> {
     })
 }
 
-fn add_up_copies(cards: &mut VecDeque<Card>, originals: &HashMap<u32, &Card>) -> u32 {
+fn add_up_copies(originals: &HashMap<u32, &Card>) -> u32 {
+    let mut queue: VecDeque<&Card> = originals.values()
+        .map(|&c| c)
+        .collect();
+
+    // Get copies for all entries in the queue and then add those
+    // copies back onto the queue. This while loop will run until the
+    // queue is empty, so if I add all the runs of the queue up, it will
+    // equal the total amout of scratchcards.
     let mut count: u32 = 0;
-    while let Some(card) = cards.pop_front() {
+    while let Some(card) = queue.pop_front() {
         count += 1;
         let copies = card.get_copies(originals);
 
         for copy in copies {
-            cards.push_back(copy.clone())
+            queue.push_back(copy)
         }
     }
 
@@ -96,10 +103,8 @@ pub fn part_two(input: &str) -> Option<u32> {
         .map(|c| (c.id, c))
         .collect();
 
-    let mut queue: VecDeque<Card> = cards.clone().into_iter().collect();
-
     Some(
-        add_up_copies(&mut queue, &originals)
+        add_up_copies(&originals)
     )
 }
 
