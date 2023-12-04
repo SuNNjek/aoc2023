@@ -28,10 +28,10 @@ impl Card {
     fn get_copies<'a>(&self, originals: &'a HashMap<u32, &'a Card>) -> Vec<&'a Card> {
         let winning_count = self.get_winning_count();
 
-        (0..winning_count).into_iter()
+        (0..winning_count)
             .filter_map(|i| {
                 let copy_id = self.id + i + 1;
-                originals.get(&copy_id).and_then(|&c| Some(c))
+                originals.get(&copy_id).copied()
             })
             .collect()
     }
@@ -65,7 +65,7 @@ fn parse_card(input: &str) -> Option<Card> {
 
 fn add_up_copies(originals: &HashMap<u32, &Card>) -> u32 {
     let mut queue: VecDeque<&Card> = originals.values()
-        .map(|&c| c)
+        .copied()
         .collect();
 
     // Get copies for all entries in the queue and then add those
@@ -82,7 +82,7 @@ fn add_up_copies(originals: &HashMap<u32, &Card>) -> u32 {
         }
     }
 
-    return count;
+    count
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
