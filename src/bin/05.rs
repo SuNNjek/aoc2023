@@ -64,13 +64,7 @@ fn parse_seeds(input: &str) -> Option<Vec<u64>> {
 
 struct Almanac {
     seeds: Vec<u64>,
-    seed_to_soil: PuzzleMap,
-    soil_to_fertilizer: PuzzleMap,
-    fertilizer_to_water: PuzzleMap,
-    water_to_light: PuzzleMap,
-    light_to_temperature: PuzzleMap,
-    temperature_to_humidity: PuzzleMap,
-    humidity_to_location: PuzzleMap,
+    maps: Vec<PuzzleMap>,
 }
 
 impl Almanac {
@@ -87,24 +81,13 @@ impl Almanac {
 
         Some(Almanac {
             seeds,
-            seed_to_soil: maps.remove(0),
-            soil_to_fertilizer: maps.remove(0),
-            fertilizer_to_water: maps.remove(0),
-            water_to_light: maps.remove(0),
-            light_to_temperature: maps.remove(0),
-            temperature_to_humidity: maps.remove(0),
-            humidity_to_location: maps.remove(0),
+            maps,
         })
     }
 
     fn get_location_of_seed(&self, seed: u64) -> u64 {
-        let soil = self.seed_to_soil.get_dest(seed);
-        let fert = self.soil_to_fertilizer.get_dest(soil);
-        let water = self.fertilizer_to_water.get_dest(fert);
-        let light = self.water_to_light.get_dest(water);
-        let temp = self.light_to_temperature.get_dest(light);
-        let hum = self.temperature_to_humidity.get_dest(temp);
-        self.humidity_to_location.get_dest(hum)
+        self.maps.iter()
+            .fold(seed, |value, map| map.get_dest(value))
     }
 }
 
