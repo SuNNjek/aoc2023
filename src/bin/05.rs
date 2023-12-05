@@ -1,8 +1,8 @@
-use std::str::Lines;
-
-use itertools::Itertools;
-
 advent_of_code::solution!(5);
+
+
+use std::str::Lines;
+use itertools::Itertools;
 
 struct PuzzleMapEntry {
     dest_range_start: u64,
@@ -50,6 +50,18 @@ impl PuzzleMap {
             None => src,
         }
     }
+
+
+    fn get_src(&self, dest: u64) -> u64 {
+        let matching_entry = self.entries
+            .iter()
+            .find(|&entry| entry.dest_range_start <= dest && dest <= (entry.dest_range_start + entry.range_len));
+
+        match matching_entry {
+            Some(&PuzzleMapEntry { src_range_start, dest_range_start, .. }) => src_range_start + (dest - dest_range_start),
+            None => dest,
+        }
+    }
 }
 
 fn parse_seeds(input: &str) -> Option<Vec<u64>> {
@@ -89,6 +101,12 @@ impl Almanac {
         self.maps.iter()
             .fold(seed, |value, map| map.get_dest(value))
     }
+
+    fn get_seed_of_location(&self, loc: u64) -> u64 {
+        self.maps.iter()
+            .rev()
+            .fold(loc, |value, map| map.get_src(value))
+    }
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
@@ -103,15 +121,20 @@ pub fn part_one(input: &str) -> Option<u64> {
 pub fn part_two(input: &str) -> Option<u64> {
     let almanac = Almanac::from_string(input)?;
 
-    let res = almanac.seeds.iter()
+    let seed_ranges = almanac.seeds.iter()
         .tuples::<(_, _)>()
-        .flat_map(|(&start, &len)| {
+        .map(|(&start, &len)| {
             start..(start + len)
         })
-        .map(|s| almanac.get_location_of_seed(s))
-        .min();
+        .collect_vec();
 
-    res
+    // Find the first location that falls within the desired range
+    // According to smarter people on the internet there's a way
+    // to do this with binary search, but I'm dumb.
+    // I'll try to understand these solutions and work my way towards it myself maybe.
+    (0..u64::MAX).find(|&loc| seed_ranges.iter().any(|range| {
+        range.contains(&almanac.get_seed_of_location(loc))
+    }))
 }
 
 #[cfg(test)]
