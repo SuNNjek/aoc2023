@@ -25,27 +25,25 @@ impl PuzzleMapEntry {
     }
 }
 
-struct PuzzleMap<'a> {
-    name: &'a str,
+struct PuzzleMap {
     entries: Vec<PuzzleMapEntry>,
 }
 
-impl<'a> PuzzleMap<'a> {
-    fn parse_map(lines: &mut Lines<'a>) -> Option<PuzzleMap<'a>> {
-        let (name, _) = lines.next()?.split_once(' ')?;
+impl PuzzleMap {
+    fn parse_map(lines: &mut Lines) -> Option<PuzzleMap> {
+        lines.next()?;
         let entries: Vec<PuzzleMapEntry> = lines
             .take_while(|&line| !line.is_empty())
             .filter_map(PuzzleMapEntry::from_string)
             .collect();
 
-        Some(PuzzleMap { name, entries })
+        Some(PuzzleMap { entries })
     }
 
     fn get_dest(&self, src: u64) -> u64 {
         let matching_entry = self.entries
             .iter()
-            .filter(|&entry| entry.src_range_start <= src && src <= (entry.src_range_start + entry.range_len))
-            .next();
+            .find(|&entry| entry.src_range_start <= src && src <= (entry.src_range_start + entry.range_len));
 
         match matching_entry {
             Some(&PuzzleMapEntry { src_range_start, dest_range_start, .. }) => dest_range_start + (src - src_range_start),
@@ -64,18 +62,18 @@ fn parse_seeds(input: &str) -> Option<Vec<u64>> {
     )
 }
 
-struct Almanac<'a> {
+struct Almanac {
     seeds: Vec<u64>,
-    seed_to_soil: PuzzleMap<'a>,
-    soil_to_fertilizer: PuzzleMap<'a>,
-    fertilizer_to_water: PuzzleMap<'a>,
-    water_to_light: PuzzleMap<'a>,
-    light_to_temperature: PuzzleMap<'a>,
-    temperature_to_humidity: PuzzleMap<'a>,
-    humidity_to_location: PuzzleMap<'a>,
+    seed_to_soil: PuzzleMap,
+    soil_to_fertilizer: PuzzleMap,
+    fertilizer_to_water: PuzzleMap,
+    water_to_light: PuzzleMap,
+    light_to_temperature: PuzzleMap,
+    temperature_to_humidity: PuzzleMap,
+    humidity_to_location: PuzzleMap,
 }
 
-impl <'a> Almanac<'a> {
+impl Almanac {
     fn from_string(input: &str) -> Option<Almanac> {
         let mut lines = input.lines();
 
@@ -120,7 +118,17 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    let almanac = Almanac::from_string(input)?;
+
+    let res = almanac.seeds.iter()
+        .tuples::<(_, _)>()
+        .flat_map(|(&start, &len)| {
+            start..(start + len)
+        })
+        .map(|s| almanac.get_location_of_seed(s))
+        .min();
+
+    res
 }
 
 #[cfg(test)]
@@ -129,13 +137,13 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let result = part_one(&advent_of_code::template::read_file("inputs", DAY));
+        let result = part_one(&advent_of_code::template::read_file("examples", DAY));
         assert_eq!(result, Some(35));
     }
 
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(46));
     }
 }
