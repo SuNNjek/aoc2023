@@ -1,6 +1,6 @@
 advent_of_code::solution!(5);
 
-
+use rayon::prelude::*;
 use std::str::Lines;
 use itertools::Itertools;
 
@@ -132,7 +132,7 @@ pub fn part_two(input: &str) -> Option<u64> {
     // According to smarter people on the internet there's a way
     // to do this with binary search, but I'm dumb.
     // I'll try to understand these solutions and work my way towards it myself maybe.
-    (0..u64::MAX).find(|&loc| seed_ranges.iter().any(|range| {
+    (0..u64::MAX).par_bridge().find_first(|&loc| seed_ranges.iter().any(|range| {
         range.contains(&almanac.get_seed_of_location(loc))
     }))
 }
