@@ -60,37 +60,35 @@ impl Hand {
     fn get_hand_type(&self) -> HandType {
         let group_counts = self.cards.iter().counts();
     
-        let sorted_counts = group_counts.into_values()
-            .sorted()
+        let sorted_counts = group_counts.iter()
+            .sorted_by(|(_, &a), (_, &b)| a.cmp(&b).reverse())
             .collect_vec();
     
-        // There's only one element, so all cards were the same
-        if sorted_counts.len() == 1 {
-            HandType::FiveOfAKind
-        } else if sorted_counts.contains(&4) {
-            HandType::FourOfAKind
-        } else if sorted_counts.contains(&3) {
-            if sorted_counts.contains(&2) {
-                HandType::FullHouse
-            } else {
-                HandType::ThreeOfAKind
-            }
-        } else if sorted_counts.contains(&2) {
-            if sorted_counts.iter().filter(|&count| count == &2).count() == 2 {
-                HandType::TwoPair
-            } else {
-                HandType::OnePair
-            }
-        } else {
-            HandType::HighCard
+        // Thanks random reddit person for this approach
+        // I wish I could figure this sorta thing out by myself but I can't unfortunately
+        let diff = (*sorted_counts[0].1 as i32) - sorted_counts.len() as i32;
+
+        match diff {
+            4 => HandType::FiveOfAKind,
+            2 => HandType::FourOfAKind,
+            1 => HandType::FullHouse,
+            0 => HandType::ThreeOfAKind,
+            -1 => HandType::TwoPair,
+            -2 => HandType::OnePair,
+
+            _ => HandType::HighCard,
         }
-    }    
+    }
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
     let hands = input.lines()
         .filter_map(Hand::from_string)
         .collect_vec();
+
+    hands.iter().for_each(|h| {
+        h.get_hand_type();
+    });
 
     Some(
         hands.iter()
