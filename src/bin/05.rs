@@ -124,7 +124,7 @@ pub fn part_two(input: &str) -> Option<u64> {
     let seed_ranges = almanac.seeds.iter()
         .tuples::<(_, _)>()
         .map(|(&start, &len)| {
-            start..(start + len)
+            start..=(start + len)
         })
         .collect_vec();
 
